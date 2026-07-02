@@ -2,7 +2,11 @@
 -- Corre isto no Supabase SQL Editor (https://supabase.com/dashboard/project/hfhjlziskjdkegaogcwq/sql/new)
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'STAFF');
+DO $$ BEGIN
+  CREATE TYPE "Role" AS ENUM ('ADMIN', 'STAFF');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateTable users
 CREATE TABLE "users" (
