@@ -16,13 +16,19 @@ VALUES
   (gen_random_uuid()::text, 'Serviços', 'servicos')
 ON CONFLICT ("slug") DO NOTHING;
 
--- Produtos (precisa dos IDs das categorias)
+-- Produtos (só insere se a tabela estiver vazia)
 DO $$
 DECLARE
   bebidas_id TEXT;
   comidas_id TEXT;
   servicos_id TEXT;
+  product_count INTEGER;
 BEGIN
+  SELECT COUNT(*) INTO product_count FROM "products";
+  IF product_count > 0 THEN
+    RETURN;
+  END IF;
+
   SELECT "id" INTO bebidas_id FROM "categories" WHERE "slug" = 'bebidas';
   SELECT "id" INTO comidas_id FROM "categories" WHERE "slug" = 'comidas';
   SELECT "id" INTO servicos_id FROM "categories" WHERE "slug" = 'servicos';
@@ -38,8 +44,7 @@ BEGIN
     (gen_random_uuid()::text, 'Pastel de Nata', 50, 15, 40, 10, comidas_id),
     (gen_random_uuid()::text, 'Bola de Berlim', 100, 35, 20, 5, comidas_id),
     (gen_random_uuid()::text, 'Corte de Cabelo', 300, 0, 999, 0, servicos_id),
-    (gen_random_uuid()::text, 'Manicure', 400, 80, 50, 10, servicos_id)
-  ON CONFLICT DO NOTHING;
+    (gen_random_uuid()::text, 'Manicure', 400, 80, 50, 10, servicos_id);
 END $$;
 
 -- Clientes
