@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales Venda[]
+
+  @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  nif       String?
+  points    Int      @default(0)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales Venda[]
+
+  @@map("customers")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  minStock    Int      @default(5)
+  categoryId  String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category?       @relation(fields: [categoryId], references: [id])
+  saleItems   SaleItem[]
+  stockMovements StockMovement[]
+
+  @@map("products")
+}
+
+model Venda {
+  id         String   @id @default(cuid())
+  total      Decimal  @db.Decimal(10, 2)
+  discount   Decimal  @default(0) @db.Decimal(10, 2)
+  paymentMethod String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customerId String?
+  userId     String
+
+  customer   Customer?  @relation(fields: [customerId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  items      SaleItem[]
+
+  @@map("vendas")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  productId String
+  vendaId   String
+
+  product Product @relation(fields: [productId], references: [id])
+  venda   Venda   @relation(fields: [vendaId], references: [id])
+
+  @@map("sale_items")
+}
+
+model PendingUser {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  notes     String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+
+  @@map("pending_users")
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  type      String
+  quantity  Int
+  notes     String?
+  createdAt DateTime @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
+}
